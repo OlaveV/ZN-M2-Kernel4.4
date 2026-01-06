@@ -12,3 +12,6 @@
 
 # Uncomment a feed source
 #echo 'src-git custom https://github.com/xiaorouji/openwrt-passwall.git;packages' >>feeds.conf.default
+# 添加 kenzok8 核心源
+echo 'src-git kenzo https://github.com/kenzok8/openwrt-packages.git;master' >> feeds.conf.default
+echo 'src-git small https://github.com/kenzok8/small.git;master' >> feeds.conf.default
