@@ -15,7 +15,7 @@
 ./scripts/feeds install -a -f -p openclash
 
 # 2. 优先更新并安装 kenzok8 相关的源
-# 这将确保来自 kenzo 和 small 仓库的插件（如 TurboACC 等）具有最高优先级
+# 这能确保 TurboACC 等内核级插件使用该仓库的最新代码
 ./scripts/feeds update kenzo
 ./scripts/feeds install -a -f -p kenzo
 
