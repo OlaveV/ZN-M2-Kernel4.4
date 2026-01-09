@@ -28,6 +28,19 @@ jobs:
     - name: Checkout
       uses: actions/checkout@main
 
+    - name: Free Disk Space (Ubuntu)
+      # 使用开源 Action 自动清理不需要的软件（Dotnet, Android SDK, Docker 镜像等）
+      # 这能腾出大约 20GB+ 的空间，解决 "No space left on device" 问题 
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+        haskell: true
+        large-packages: true
+        docker-images: true
+        swap-storage: true
+
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -41,77 +54,79 @@ jobs:
     - name: Clone source code
       working-directory: /workdir
       run: |
-        git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt
+        git clone $REPO_URL -b $REPO_BRANCH openwrt 
+        ln -sf /workdir/openwrt $GITHUB_WORKSPACE/openwrt 
 
     - name: Load custom feeds
       run: |
-        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default
-        chmod +x $DIY_P1_SH
+        [ -e $FEEDS_CONF ] && mv $FEEDS_CONF openwrt/feeds.conf.default 
+        chmod +x $DIY_P1_SH 
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P1_SH
+        $GITHUB_WORKSPACE/$DIY_P1_SH 
 
     - name: Update feeds
-      run: cd openwrt && ./scripts/feeds update -a
+      [cite_start]run: cd openwrt && ./scripts/feeds update -a [cite: 1]
 
     - name: Modify feeds
       run: |
-        chmod +x $DIY_P2_SH
+        chmod +x $DIY_P2_SH 
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P2_SH
+        $GITHUB_WORKSPACE/$DIY_P2_SH 
 
     - name: Install feeds
-      run: cd openwrt && ./scripts/feeds install -a
+      [cite_start]run: cd openwrt && ./scripts/feeds install -a [cite: 1]
 
     - name: Load custom configuration
       run: |
-        [ -e files ] && mv files openwrt/files
-        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
-        chmod +x $DIY_P3_SH
+        [ -e files ] && mv files openwrt/files 
+        [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config 
+        chmod +x $DIY_P3_SH 
         cd openwrt
-        $GITHUB_WORKSPACE/$DIY_P3_SH
+        $GITHUB_WORKSPACE/$DIY_P3_SH 
 
     - name: Download package
       id: package
       run: |
         cd openwrt
-        make defconfig
-        make download -j8
-        find dl -size -1024c -exec rm -f {} \;
+        make defconfig 
+        make download -j8 
+        find dl -size -1024c -exec rm -f {} \; 
 
     - name: Compile the firmware
       id: compile
       run: |
         cd openwrt
-        make -j$(nproc) || make -j1 V=s
-        echo "status=success" >> $GITHUB_OUTPUT
+        # 增加磁盘监控，如果空间不足会打印当前占用情况
+        df -h
+        make -j$(nproc) || make -j1 V=s 
+        echo "status=success" >> $GITHUB_OUTPUT 
 
     - name: Organize files
       id: organize
       run: |
-        cd openwrt/bin/targets/*/*
-        rm -rf packages
-        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
-        echo "status=success" >> $GITHUB_OUTPUT
+        cd openwrt/bin/targets/*/* 
+        rm -rf packages 
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV 
+        echo "status=success" >> $GITHUB_OUTPUT 
 
     - name: Generate release tag
       id: tag
-      if: env.UPLOAD_RELEASE == 'true' && steps.compile.outputs.status == 'success'
+      [cite_start]if: env.UPLOAD_RELEASE == 'true' && steps.compile.outputs.status == 'success' [cite: 1]
       run: |
-        echo "release_tag=v$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_OUTPUT
-        touch release.txt
-        echo "ZN-M2 OpenClash Firmware" >> release.txt
-        echo "status=success" >> $GITHUB_OUTPUT
+        echo "release_tag=v$(date +"%Y.%m.%d.%H%M")" >> $GITHUB_OUTPUT 
+        touch release.txt 
+        echo "ZN-M2 OpenClash Firmware" >> release.txt 
+        echo "status=success" >> $GITHUB_OUTPUT 
 
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v2
-      if: steps.tag.outputs.status == 'success'
+      [cite_start]if: steps.tag.outputs.status == 'success' [cite: 1]
       env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        [cite_start]GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} [cite: 1]
       with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        body_path: release.txt
+        [cite_start]tag_name: ${{ steps.tag.outputs.release_tag }} [cite: 1]
+        [cite_start]body_path: release.txt [cite: 1]
         files: |
-         ${{ env.FIRMWARE }}/*.ubi
-         ${{ env.FIRMWARE }}/*.bin
+         ${{ env.FIRMWARE }}/*.ubi 
+         ${{ env.FIRMWARE }}/*.bin 
          ${{ env.FIRMWARE }}/*.manifest
