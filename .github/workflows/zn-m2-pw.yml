@@ -41,8 +41,10 @@ jobs:
     - name: Initialization environment
       run: |
         sudo -E apt-get -qq update
+        # 补全了编译 host tools 所需的 libzstd, liblzo2, libdw 等关键库
         sudo -E apt-get -qq install -y build-essential clang flex bison g++ gawk gcc-multilib g++-multilib \
-        gettext git libncurses-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+        gettext git libncurses-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget \
+        libzstd-dev liblzo2-dev zstd libdw-dev
         sudo timedatectl set-timezone "$TZ"
 
     - name: Clone source code
@@ -76,6 +78,10 @@ jobs:
     - name: Load config & DIY3
       run: |
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE openwrt/.config
+        
+        # 核心修复：强制禁用配置文件中的 ccache，防止编译器环境检测失败
+        sed -i 's/CONFIG_CCACHE=y/CONFIG_CCACHE=n/g' openwrt/.config
+        
         chmod +x $DIY_P3_SH
         cd openwrt && $GITHUB_WORKSPACE/$DIY_P3_SH
 
@@ -90,6 +96,7 @@ jobs:
       id: compile
       run: |
         cd openwrt
+        # 第一次尝试多线程编译，失败则切换单线程输出详细日志
         make -j$(nproc) || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
 
