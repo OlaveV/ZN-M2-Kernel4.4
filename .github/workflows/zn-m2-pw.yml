@@ -30,7 +30,6 @@ jobs:
     - name: Free Disk Space
       uses: jlumbroso/free-disk-space@main
       with:
-        # 释放尽可能多的空间给编译
         tool-cache: true
         android: true
         dotnet: true
@@ -49,7 +48,6 @@ jobs:
     - name: Clone source code
       run: |
         git clone $REPO_URL -b $REPO_BRANCH openwrt
-        ln -sf $GITHUB_WORKSPACE/openwrt /workdir/openwrt
 
     - name: Cache dl
       uses: actions/cache@v4
@@ -92,7 +90,6 @@ jobs:
       id: compile
       run: |
         cd openwrt
-        # 优先使用多线程，报错则切换单线程 V=s 模式
         make -j$(nproc) || make -j1 V=s
         echo "status=success" >> $GITHUB_OUTPUT
 
