@@ -1,23 +1,18 @@
 #!/bin/bash
-#
-# Copyright (c) 2019-2020 P3TERX <https://p3terx.com>
-#
-# This is free software, licensed under the MIT License.
-# See /LICENSE for more information.
-#
-# https://github.com/P3TERX/Actions-OpenWrt
 # File name: diy-part3.sh
-# Description: OpenWrt DIY script part 3 (After Install feeds)
-#
 
-# Modify default IP
-#sed -i 's/192.168.1.1/192.168.100.1/g' package/base-files/files/bin/config_generate
+# 修改固件描述信息
+sed -i "s/DISTRIB_DESCRIPTION='*.*'/DISTRIB_DESCRIPTION='OpenWrt ZN-M2 No-WiFi (Build: $(date +%Y%m%d))'/g" package/base-files/files/etc/openwrt_release
 
-#修改版本信息
-sed -i "s/DISTRIB_DESCRIPTION='*.*'/DISTRIB_DESCRIPTION='OpenWrt IPQ6000 ZN-M2 (build time: $(date +%Y%m%d))'/g"  package/base-files/files/etc/openwrt_release
-# 替换golang版本为1.25
-rm -rf feeds/packages/lang/golang
-git clone https://github.com/sbwml/packages_lang_golang -b 25.x feeds/packages/lang/golang
+# 1. 物理精简：彻底从源码删除 WiFi 驱动目录
+rm -rf package/kernel/mac80211
+rm -rf package/network/config/wifi-scripts
 
-# design修改proxy链接
-sed -i -r "s#navbar_proxy = 'openclash'#navbar_proxy = 'passwall'#g" feeds/luci/themes/luci-theme-design/luasrc/view/themes/design/header.htm
+# 2. 修正 Design 主题的代理菜单链接至 Passwall
+HEADER_FILE="feeds/luci/themes/luci-theme-design/luasrc/view/themes/design/header.htm"
+if [ -f "$HEADER_FILE" ]; then
+    sed -i -r "s#navbar_proxy = 'openclash'#navbar_proxy = 'passwall'#g" "$HEADER_FILE"
+fi
+
+# 3. 彻底删除 Web 界面中的“无线”菜单索引
+rm -f feeds/luci/modules/luci-mod-status/luasrc/view/admin_status/index_wifi.htm
