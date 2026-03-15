@@ -10,7 +10,7 @@
 # See /LICENSE for more information.
 #
 
-name: zn-m2-oc build
+name: zn-m2-pw build
 
 on:
   repository_dispatch:
@@ -23,10 +23,10 @@ env:
   REPO_URL: https://github.com/openwrt-fork/sdf8057-ipq6000.git
   REPO_BRANCH: master
   FEEDS_CONF: feeds.conf.default
-  CONFIG_FILE: ./config/zn-m2-oc.config
-  DIY_P1_SH: ./scripts/zn-m2-oc/diy-part1.sh
-  DIY_P2_SH: ./scripts/zn-m2-oc/diy-part2.sh
-  DIY_P3_SH: ./scripts/zn-m2-oc/diy-part3.sh
+  CONFIG_FILE: ./config/zn-m2-pw.config
+  DIY_P1_SH: ./scripts/zn-m2-pw/diy-part1.sh
+  DIY_P2_SH: ./scripts/zn-m2-pw/diy-part2.sh
+  DIY_P3_SH: ./scripts/zn-m2-pw/diy-part3.sh
   UPLOAD_BIN_DIR: false
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
@@ -162,9 +162,13 @@ jobs:
         echo "release_tag=v$(date +"%Y.%m.%d.%H%M")/zn-m2/basic" >> $GITHUB_OUTPUT
         touch release.txt
         echo "ZN-M2 firmware" >> release.txt
-        grep luci-app-openclash ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print "OpenClash " "`"$2"`"}' >> release.txt
+        grep luci-app-passwall ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print "Passwall " "`"$2"`"}' >> release.txt
+        grep xray-core ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print $2}'| awk -F"-" '{print "Xray " "`"$1"`"}' >> release.txt
+        grep sing-box ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print $2}'| awk -F"-" '{print "Sing-Box " "`"$1"`"}' >> release.txt
+        grep hysteria ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print $2}'| awk -F"-" '{print "Hysteria " "`"$1"`"}' >> release.txt
+        grep chinadns-ng ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print $2}'| awk -F"-" '{print "ChinaDNS-NG " "`"$1"`"}' >> release.txt
         echo "详细包信息请查看 manifest 文件" >> release.txt
-        grep luci-app-openclash ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print "release_name=OpenClash " $2}' >> $GITHUB_OUTPUT
+        grep luci-app-passwall ${{ env.FIRMWARE }}/openwrt-ipq60xx-generic-device-zn-m2.manifest | awk -F" - " '{print "release_name=Passwall " $2}' >> $GITHUB_OUTPUT
         echo "status=success" >> $GITHUB_OUTPUT
 
     - name: Upload firmware to release
